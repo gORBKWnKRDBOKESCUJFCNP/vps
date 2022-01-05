@@ -1,51 +1,26 @@
-# This code is licensed from CircleCI to the user under the MIT license.
-# See here for details: https://circleci.com/developer/orbs/licensing
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-commands:
-  setup:
-    description: "Set up the ssh tunnel"
-    parameters:
-      key_fingerprint:
-        type: string
-      timeout:
-        type: integer
-      from_host:
-        type: string
-        default: 127.0.0.1
-      from_port:
-        type: string
-      to_host:
-        type: string
-        default: 127.0.0.1
-      to_port:
-        type: string
-      jump_server:
-        type: env_var_name
-        default: JUMP_SERVER
-    steps:
-      - add_ssh_keys:
-          fingerprints:
-            - << parameters.key_fingerprint >>
-      - run:
-          name: Set up ssh tunnel (IPv4)
-          command: ssh -L << parameters.from_host >>:<< parameters.from_port >>:<< parameters.to_host >>:<< parameters.to_port >> -oStrictHostKeyChecking=no -4 -N -q circleci@${<< parameters.jump_server >>}
-          background: true
-      - run: 
-          name: Wait for tunnel establishment
-          shell: /bin/bash
-          command: |
-            COUNT=0
-            until nc -z << parameters.from_host >> << parameters.from_port >>; do
-              if [ $COUNT -ge << parameters.timeout >> ]; then
-                echo "ssh tunnel set up timeout";
-                exit 1;
-              fi;
-              ((COUNT++))
-              sleep 1
-            done
 
-  release_all:
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  say-hello:
+    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      - image: cimg/base:stable
+    # Add steps to the job
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
+      - checkout
       - run:
-          name: Release all ssh tunnel
-          command: ps u | grep -- 'ssh -L' | grep -v 'grep' | awk '{print $2}' | xargs kill
+          name: "Say hello"
+          command: "echo Hello, World!"
+
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+workflows:
+  say-hello-workflow:
+    jobs:
+      - say-hello
