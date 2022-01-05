@@ -6,4 +6,4 @@ jobs:
       # ...
       - run:
         command: |
-          whoami
+          pipenv run python manage.py test
